@@ -1,68 +1,76 @@
 <script>
-    let rawList = "<%= theme.background %>".split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    (function () {
+        let rawList = "<%= theme.background %>".split(',').map(function (s) { return s.trim(); }).filter(Boolean);
 
-    // 系统开启“减少动态效果”或浏览器“省流”时，剔除视频，只用图片
-    let prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let saveData = navigator.connection && navigator.connection.saveData;
+        // 系统开启“减少动态效果”或浏览器“省流”时，剔除视频，只用图片
+        let prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let saveData = navigator.connection && navigator.connection.saveData;
 
-    function isVideo(url) { return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url); }
+        function isVideo(url) { return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url); }
 
-    let usable = rawList.filter(function (u) {
-        if (!isVideo(u)) return true;
-        return !(prefersReduced || saveData);
-    });
+        let usable = rawList.filter(function (u) {
+            if (!isVideo(u)) return true;
+            return !(prefersReduced || saveData);
+        });
 
-    let heroVideo = usable.find(isVideo);                 // 主背景视频（若启用）
-    let images = usable.filter(function (u) { return !isVideo(u); });
-    let baseImage = images[0];                            // 底层兜底图片
+        let heroVideo = usable.find(isVideo);                 // 主背景视频（若启用）
+        let images = usable.filter(function (u) { return !isVideo(u); });
+        let baseImage = images[0];                            // 底层兜底图片
 
-    function setBaseImage(url) {
-        if (url) document.getElementById("bg").style.backgroundImage = "url(" + url + ")";
-    }
+        // 空值保护：#bg 可能尚未渲染（本脚本位于 <div id="bg"> 之前）
+        function setBaseImage(url) {
+            let el = document.getElementById("bg");
+            if (el && url) el.style.backgroundImage = "url(" + url + ")";
+        }
 
-    function mountVideo(url) {
-        let old = document.getElementById("bg-video");
-        if (old) old.remove();
-        let v = document.createElement("video");
-        v.id = "bg-video";
-        v.src = url;
-        v.autoplay = true;
-        v.muted = true;
-        v.defaultMuted = true;
-        v.loop = true;
-        v.playsInline = true;
-        v.setAttribute("muted", "");
-        v.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;";
-        // 视频加载/播放失败（被拦截、格式不支持、网络错误）时，移除自己，露出底层图片
-        v.addEventListener("error", function () { v.remove(); setBaseImage(baseImage); });
-        document.body.prepend(v);
-        let p = v.play();
-        if (p && p.catch) p.catch(function () {}); // 自动播放被拒则静默，保留图片兜底
-    }
+        function mountVideo(url) {
+            let old = document.getElementById("bg-video");
+            if (old) old.remove();
+            let v = document.createElement("video");
+            v.id = "bg-video";
+            v.src = url;
+            v.autoplay = true;
+            v.muted = true;
+            v.defaultMuted = true;
+            v.loop = true;
+            v.playsInline = true;
+            v.setAttribute("muted", "");
+            v.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;";
+            // 视频加载/播放失败（被拦截、格式不支持、网络错误）时，移除自己，露出底层图片
+            v.addEventListener("error", function () { v.remove(); setBaseImage(baseImage); });
+            document.body.prepend(v);
+            let p = v.play();
+            if (p && p.catch) p.catch(function () {}); // 自动播放被拒则静默，保留图片兜底
+        }
 
-    function mountImage(url) {
-        let old = document.getElementById("bg-video");
-        if (old) old.remove();
-        setBaseImage(url);
-    }
+        function mountImage(url) {
+            let old = document.getElementById("bg-video");
+            if (old) old.remove();
+            setBaseImage(url);
+        }
 
-    setBaseImage(baseImage);
+        // DOM 就绪后再初始化（避免 #bg 为 null 导致报错中断整个脚本）
+        function init() {
+            setBaseImage(baseImage);
+            if (heroVideo) {
+                // 视频作主背景，持续播放；底层图片始终兜底（不再 15 秒轮换）
+                mountVideo(heroVideo);
+            } else if (images.length) {
+                // 没有（可用）视频：在图片之间轮换
+                let idx = 0;
+                let rotate = function () {
+                    mountImage(images[idx]);
+                    idx = (idx + 1) % images.length;
+                };
+                setTimeout(rotate, 1000);
+                if (images.length > 1) setInterval(rotate, 15000);
+            }
+        }
 
-    if (heroVideo) {
-        // 视频作主背景，持续播放；底层图片始终兜底（不再 15 秒轮换）
-        mountVideo(heroVideo);
-    } else if (images.length) {
-        // 没有（可用）视频：在图片之间轮换
-        let idx = 0;
-        (function changeImage() {
-            setTimeout(function () {
-                mountImage(images[idx]);
-                idx = (idx + 1) % images.length;
-            }, 1000);
-        })();
-        if (images.length > 1) setInterval(function () {
-            mountImage(images[idx]);
-            idx = (idx + 1) % images.length;
-        }, 15000);
-    }
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", init);
+        } else {
+            setTimeout(init, 0);
+        }
+    })();
 </script>
