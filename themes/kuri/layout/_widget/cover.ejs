@@ -39,7 +39,14 @@
             v.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;";
             // 视频加载/播放失败（被拦截、格式不支持、网络错误）时，移除自己，露出底层图片
             v.addEventListener("error", function () { v.remove(); setBaseImage(baseImage); });
-            document.body.prepend(v);
+            // 关键修复：把视频插入到与 #bg 同一个容器内、#bg 之后，
+            // 避免被外层 wrapper 的层叠上下文盖住（否则视频永远在 #bg 图片之下不可见）
+            let bgEl = document.getElementById("bg");
+            if (bgEl && bgEl.parentNode) {
+                bgEl.parentNode.insertBefore(v, bgEl.nextSibling);
+            } else {
+                document.body.appendChild(v);
+            }
             let p = v.play();
             if (p && p.catch) p.catch(function () {}); // 自动播放被拒则静默，保留图片兜底
         }
