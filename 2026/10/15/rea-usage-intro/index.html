@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="utf-8" />
+  <title>如何使用 REA：逆向一切的工具 - Songgexnl 的小站</title>
+  <link rel="icon" href="/images/fav.png" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <meta name="keywords" content="blog, hexo, kuri" />
+  <meta name="description" content="一个用 Hexo 搭建的个人博客" />
+  <link rel="canonical" href="https://songgexnl.github.io/2026/10/15/rea-usage-intro/" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/mdui.css" importance="high"/>
+  <script src="//cdn.kuri.ink/js/mdui/mdui.min.js" async></script>
+  <style>
+   @import url("/css/iconfont.css");
+   .post-meta { color: #999; font-size: 14px; margin-bottom: 24px; }
+   .post-meta a { color: #999; margin-right: 8px; }
+   .post-title { margin-bottom: 8px; }
+   .back-home { margin-top: 32px; display: inline-block; }
+  </style>
+ <meta name="generator" content="Hexo 8.1.2"></head>
+ <body>
+   <script>
+    let images = "https://api.ee123.net/img/bingimg/dayimg.jpg"
+    images = images.split(',')
+    let currentIndex = 0;
+
+    function changeBackground() {
+        //document.getElementById("bg").style.opacity = 1; // 渐隐
+        setTimeout(() => {
+            document.getElementById("bg").style.backgroundImage = `url(${images[currentIndex]})`;
+            document.getElementById("bg").style.opacity = 1; // 渐显
+            currentIndex = (currentIndex + 1) % images.length;
+        }, 1000); // 与transition时间一致
+    }
+
+    changeBackground()
+    setInterval(changeBackground, 15000); // 每15秒切换一次背景
+</script>
+  <div class="mdui-drawer-body-left mdui-appbar-with-toolbar mdui-theme-layout-auto mdui-loaded">
+   <div id="bg" class="index_bg"></div>
+   <div>
+    <header class="appbar mdui-appbar mdui-appbar-fixed" importance="high"> 
+    <div class="mdui-toolbar mdui-color-theme card-content"> 
+     <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" mdui-drawer="{target: '#main-drawer', swipe: true}"> <i class="mdui-icon material-icons" mdui-tooltip="{content: '菜单'}">menu</i> </span> 
+     <div class="mdui-toolbar-spacer">
+       
+      <chizaobook style="line-height: 1em; color:#F5F5F5;;"> 
+       <script>
+        let app = document.createElement('script');
+            app.src = 'https://cdn.jsdelivr.net/gh/ChizaoProject/chizaobook@master/app.js';
+            app.async = true;
+            app.onload = function () {
+              chizaobook = new Chizaobook({
+                container: "chizaobook", // string
+                packageSource: "https://cdn.jsdelivr.net/gh/ChizaoProject/Packages@master/package_source.json", // string
+                packageType: null // int
+          })
+          chizaobook.selector();
+          };
+        document.head.appendChild(app);
+       </script> 
+       <!--<div class="mdui-chip" style="margin: auto; position: fixed; transform: translate(0, -50%);">
+             <span id="time" class="mdui-chip-title" style="transform: translate(0, -50%);"></span>
+             <script>
+               var datetime = new Date();
+               console.log(datetime);
+             </script>
+           </div>
+           --> 
+      </chizaobook>
+      
+     </div> 
+     <a href="https://github.com/Songgexnl" target="_blank" class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" mdui-tooltip="{content: 'Github'}"> 
+      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewbox="0 0 36 36" enable-background="new 0 0 36 36" xml:space="preserve" class="mdui-icon" style="width: 24px;height:24px;"> 
+       <path fill-rule="evenodd" clip-rule="evenodd" fill="#ffffff" d="M18,1.4C9,1.4,1.7,8.7,1.7,17.7c0,7.2,4.7,13.3,11.1,15.5c0.8,0.1,1.1-0.4,1.1-0.8c0-0.4,0-1.4,0-2.8c-4.5,1-5.5-2.2-5.5-2.2c-0.7-1.9-1.8-2.4-1.8-2.4c-1.5-1,0.1-1,0.1-1c1.6,0.1,2.5,1.7,2.5,1.7c1.5,2.5,3.8,1.8,4.7,1.4c0.1-1.1,0.6-1.8,1-2.2c-3.6-0.4-7.4-1.8-7.4-8.1c0-1.8,0.6-3.2,1.7-4.4c-0.2-0.4-0.7-2.1,0.2-4.3c0,0,1.4-0.4,4.5,1.7c1.3-0.4,2.7-0.5,4.1-0.5c1.4,0,2.8,0.2,4.1,0.5c3.1-2.1,4.5-1.7,4.5-1.7c0.9,2.2,0.3,3.9,0.2,4.3c1,1.1,1.7,2.6,1.7,4.4c0,6.3-3.8,7.6-7.4,8c0.6,0.5,1.1,1.5,1.1,3c0,2.2,0,3.9,0,4.5c0,0.4,0.3,0.9,1.1,0.8c6.5-2.2,11.1-8.3,11.1-15.5C34.3,8.7,27,1.4,18,1.4z"></path> 
+      </svg> </a> 
+    </div> 
+   </header> 
+    <div class="mdui-drawer mdui-drawer-close sidebar" id="main-drawer">
+     <div class="mdui-list" mdui-collapse="{accordion: true}" style="margin-bottom: 75px;">
+      
+      <div class="mdui-collapse-item">
+       <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
+        <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue">near_me</i>
+        <div class="mdui-list-item-content">A1</div>
+        <i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
+       </div>
+       
+         <div class="mdui-collapse-item-body mdui-list">
+          <a href="https://example.com/" target="_blank" mdui-tooltip="{content: 'example'}" class="mdui-list-item mdui-ripple">B1</a>
+         </div>
+         
+      </div>
+      
+      <div class="mdui-collapse-item">
+       <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
+        <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-green">library_books</i>
+        <div class="mdui-list-item-content">文章</div>
+        <i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
+       </div>
+       
+         <div class="mdui-collapse-item-body mdui-list">
+          <a href="/2026/10/15/hello-hexo/" target="_blank" mdui-tooltip="{content: '测试文章'}" class="mdui-list-item mdui-ripple">我的第一篇测试文章</a>
+         </div>
+         
+         <div class="mdui-collapse-item-body mdui-list">
+          <a href="/2026/10/15/rea-usage-intro/" target="_blank" mdui-tooltip="{content: 'REA 逆向工具'}" class="mdui-list-item mdui-ripple">如何使用 REA：逆向一切的工具</a>
+         </div>
+         
+      </div>
+      
+     </div>
+    </div>
+   </div>
+
+   <div id="container" class="container">
+    <div class="card" style="margin-top: 1%;">
+     <div id="card-content" class="card-content mdui-typo">
+      <h1 class="post-title">如何使用 REA：逆向一切的工具</h1>
+      <div class="post-meta">
+       2026-10-15
+       
+         
+           &nbsp;/&nbsp;<a href="/categories/工具推荐/">工具推荐</a>
+         
+       
+       
+         
+           &nbsp;#<a href="/tags/REA/">REA</a>
+         
+           &nbsp;#<a href="/tags/逆向工程/">逆向工程</a>
+         
+           &nbsp;#<a href="/tags/MCP/">MCP</a>
+         
+           &nbsp;#<a href="/tags/工具推荐/">工具推荐</a>
+         
+       
+      </div>
+      <p>你是否遇到过这样的场景：看到一个 App 的酷炫功能，心里想着「这到底是怎么实现的？」却苦于没有源码、无从下手。今天要介绍的 <strong>REA（Reverse Engineer Anything，逆向一切）</strong> 就是为解决这类问题而生的。</p>
+<blockquote>
+<p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/morluto/rea">https://github.com/morluto/rea</a><br>官方站点（含中文文档）：<a target="_blank" rel="noopener" href="https://rea.tools/zh-CN/">https://rea.tools/zh-CN/</a></p>
+</blockquote>
+<h2 id="什么是-REA"><a href="#什么是-REA" class="headerlink" title="什么是 REA"></a>什么是 REA</h2><p>REA 是一个 <strong>MCP（Model Context Protocol）服务</strong>，它把 AI 智能体与一整套逆向分析工具连接起来，让你能够分析：</p>
+<ul>
+<li>原生二进制文件（EXE、ELF、Mach-O 等）</li>
+<li>JavaScript &#x2F; Electron 应用</li>
+<li>.NET 程序集</li>
+<li>网站、网络抓包、Android APK、固件……</li>
+</ul>
+<p>它的核心卖点是：<strong>看到喜欢的功能，让智能体去查清它的工作原理，一直追溯到二进制层面，并附带可验证的「证据」</strong>。换句话说，REA 不只是「反编译给你看」，而是把「找答案 → 给证据 → 复现实现」整条链路自动化。</p>
+<p>几个关键特性：</p>
+<ul>
+<li><strong>本地分析</strong>：目标文件在本机被解析，不会上传你的应用。</li>
+<li><strong>证据驱动</strong>：每次结论都附带支撑它的代码、引用与限制，而非凭空猜测。</li>
+<li><strong>智能体 + 终端两套入口</strong>：既能在 Claude Code、Cursor 等智能体里用，也能直接在命令行调用。</li>
+<li><strong>MCP 标准协议</strong>：任何支持本地 MCP 的智能体都能接入。</li>
+</ul>
+<h2 id="环境要求"><a href="#环境要求" class="headerlink" title="环境要求"></a>环境要求</h2><p>REA 基于 Node.js 运行，需要先装好 <strong>Node.js 22.x（&gt;&#x3D;22.19）&#x2F; 24.x（&gt;&#x3D;24.11）&#x2F; 26+</strong> 以及 npm。</p>
+<blockquote>
+<p>原生的深度反汇编（如分析 EXE）还需要一个反编译引擎，例如 <strong>Hopper、Ghidra 或 IDA</strong>；但 <strong>JavaScript &#x2F; Electron 的静态分析不需要</strong>任何原生引擎，开箱即用。</p>
+</blockquote>
+<h2 id="快速开始"><a href="#快速开始" class="headerlink" title="快速开始"></a>快速开始</h2><h3 id="1-一条命令，把-REA-装进你的智能体"><a href="#1-一条命令，把-REA-装进你的智能体" class="headerlink" title="1. 一条命令，把 REA 装进你的智能体"></a>1. 一条命令，把 REA 装进你的智能体</h3><p>确保已安装 Node.js 与 npm 后，在终端运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx rea-agents setup</span><br></pre></td></tr></table></figure>
+
+<p>它会让你选择要配置的智能体（支持 Claude Code、Codex、Cursor、Gemini CLI、Grok Build 等），然后<strong>展示将要修改的计划</strong>，你确认批准后，它会：</p>
+<ol>
+<li>为智能体注册 REA 的 MCP 服务；</li>
+<li>安装与之匹配的工作流（skill）指引；</li>
+<li>备份你已有的配置文件。</li>
+</ol>
+<p>完成后<strong>重启智能体</strong>即可生效。</p>
+<h3 id="2-直接问智能体问题"><a href="#2-直接问智能体问题" class="headerlink" title="2. 直接问智能体问题"></a>2. 直接问智能体问题</h3><p>配置好之后，你不需要记任何命令，直接用自然语言提问即可。例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">弄清 Notes 应用的搜索功能如何工作，展示证据，并为我的项目实现类似功能。</span><br></pre></td></tr></table></figure>
+
+<p>把 <code>Notes</code> 换成你的目标应用，再描述你想了解的功能。智能体会调用 REA 去追踪相关代码、解释行为，甚至帮你写并测试一份复现实现。</p>
+<h3 id="3-在终端里直接分析"><a href="#3-在终端里直接分析" class="headerlink" title="3. 在终端里直接分析"></a>3. 在终端里直接分析</h3><p>如果你只想快速检查一个已解包的 JavaScript &#x2F; Electron 应用目录或 ASAR 文件，可以不用智能体，直接在命令行跑：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx -y rea-agents@latest analyze-javascript-application /absolute/path/to/app --json</span><br></pre></td></tr></table></figure>
+
+<p>返回结果包含：模块关系、导入、Electron 主进程&#x2F;渲染进程边界、以及对应的证据。把路径换成你自己的目标，例如 Windows 上：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx -y rea-agents@latest analyze-javascript-application <span class="string">&quot;D:/apps/example&quot;</span> --json</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-安装全局命令（可选）"><a href="#4-安装全局命令（可选）" class="headerlink" title="4. 安装全局命令（可选）"></a>4. 安装全局命令（可选）</h3><p>如果经常用，建议装一个全局 <code>rea</code> 命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install --global rea-agents</span><br><span class="line">rea --<span class="built_in">help</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-保持更新"><a href="#5-保持更新" class="headerlink" title="5. 保持更新"></a>5. 保持更新</h3><p>REA 更新很频繁，新版本常包含问题修复，建议保持最新：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 全局安装的 CLI</span></span><br><span class="line">rea update</span><br><span class="line"></span><br><span class="line"><span class="comment"># 用 npx 配置过智能体的，重新跑 setup 即可更新注册</span></span><br><span class="line">npx rea-agents@latest setup</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>如果使用 Bun，<code>bunx rea-agents@latest</code> 等价于上面的 <code>npx rea-agents@latest</code>，全局更新需 Bun 1.2.17+。</p>
+</blockquote>
+<h2 id="它能分析什么（部分）"><a href="#它能分析什么（部分）" class="headerlink" title="它能分析什么（部分）"></a>它能分析什么（部分）</h2><table>
+<thead>
+<tr>
+<th>目标</th>
+<th>REA 返回的内容</th>
+<th>额外要求</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原生二进制文件</td>
+<td>伪代码、汇编、字符串、符号、调用与引用</td>
+<td>Hopper &#x2F; Ghidra &#x2F; IDA</td>
+</tr>
+<tr>
+<td>Go 二进制文件</td>
+<td>编译器版本、模块、构建设置</td>
+<td>内置，无需装 Go</td>
+</tr>
+<tr>
+<td>JavaScript &#x2F; Electron</td>
+<td>模块、导入、source map、路由、IPC 关系</td>
+<td>Node.js + npm</td>
+</tr>
+<tr>
+<td>网站</td>
+<td>页面结构、脚本、网络观察、截图</td>
+<td>Chrome 系浏览器</td>
+</tr>
+<tr>
+<td>.NET 程序集</td>
+<td>元数据、CIL 指令、原生依赖</td>
+<td>静态检查，无需运行</td>
+</tr>
+<tr>
+<td>Android APK</td>
+<td>清单、类、反编译方法与引用</td>
+<td>JADX + JDK</td>
+</tr>
+<tr>
+<td>网络抓包（HAR &#x2F; pcap）</td>
+<td>请求、端点、DNS、TLS SNI、协议分布</td>
+<td>tshark &#x2F; mitmdump 等</td>
+</tr>
+<tr>
+<td>固件</td>
+<td>区域、提取结果、转交原生分析</td>
+<td>Binwalk &#x2F; Unblob</td>
+</tr>
+</tbody></table>
+<p>完整清单见官方文档的<a target="_blank" rel="noopener" href="https://rea.tools/zh-CN/">工具目录</a>。</p>
+<h2 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h2><p>整个调查流程可以概括为一句话：<strong>智能体通过 MCP 调用 REA → REA 调用底层分析工具检查并追踪目标 → 返回发现与证据 → 智能体据此追问、解释、编写并测试实现</strong>。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">你 / 终端</span><br><span class="line">   │  提问或命令</span><br><span class="line">   ▼</span><br><span class="line">智能体（支持 MCP 的任意客户端）</span><br><span class="line">   │  MCP 调用</span><br><span class="line">   ▼</span><br><span class="line">REA（本机运行）</span><br><span class="line">   │  调用</span><br><span class="line">   ▼</span><br><span class="line">分析工具（Hopper / Ghidra / IDA / JADX / tshark …）</span><br><span class="line">   │  返回</span><br><span class="line">   ▼</span><br><span class="line">REA 汇总「发现 + 证据 + 限制」回传给智能体</span><br></pre></td></tr></table></figure>
+
+<p>CLI 命令走的是同一套工作流，所以无论你用智能体还是纯命令行，背后逻辑一致。</p>
+<h2 id="实战案例"><a href="#实战案例" class="headerlink" title="实战案例"></a>实战案例</h2><p>官方给出了几个很直观的复现案例：</p>
+<ul>
+<li><strong>DX-Ball：重建声像计算</strong> —— 顺着声音调用链，定位到根据位置计算声像的辅助函数，把不完整的伪代码还原成 C，重建结果通过了 3000+ 个原始 x86 测试用例。</li>
+<li><strong>Notion：追踪 Electron 剪贴板桥</strong> —— 找到渲染进程的剪贴板 API，沿 preload 与 IPC 一路追到主进程，查清富格式剪贴板数据的来龙去脉。</li>
+<li><strong>TH04：恢复 DOS 环形子弹计算</strong> —— 解析老 PC-98 游戏的 16 位指令，恢复固定角度与瞄准角度的计算，并把重建的 C++ 与当年的编译器输出做对比。</li>
+</ul>
+<p>每个案例都配有完整的复现项目仓库，强烈建议去 <a target="_blank" rel="noopener" href="https://rea.tools/zh-CN/showcase/">REA 案例页</a> 看看。</p>
+<h2 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h2><p><strong>Q：哪些智能体能用 REA？</strong><br>任何支持本地 MCP 服务的智能体都行。设置流程会配置官方支持的几种；其他客户端也可以手动注册 MCP 接入。</p>
+<p><strong>Q：一定要装 Hopper &#x2F; Ghidra &#x2F; IDA 吗？</strong><br>做深入的原生反汇编时需要其中一个；而 <strong>JavaScript 和 .NET 的静态检查不需要</strong>任何原生引擎。设置流程在你批准后可以帮你装 Hopper，Ghidra &#x2F; IDA 则复用你已有的安装。</p>
+<p><strong>Q：REA 会把我的应用上传到云端吗？</strong><br>不会。REA 在本机分析目标；只有「工具结果」会交给智能体，而智能体背后的模型服务商有各自的数据政策，这部分需要你自行留意。</p>
+<p><strong>Q：遇到报错怎么办？</strong><br>先更新（<code>rea update</code> 或重新跑 <code>setup</code>），多数问题在新版本已修复；若仍不行，到 GitHub 提交 issue，附上 REA 版本、目标类型、复现步骤和错误输出。</p>
+<h2 id="合法使用声明"><a href="#合法使用声明" class="headerlink" title="合法使用声明"></a>合法使用声明</h2><p>REA 定位是<strong>合法</strong>的研究、教育、互操作性、软件保存，以及分析你<strong>拥有或获准检查</strong>的软件。对于 IDA Pro、Hopper、JEB 等商业工具，需要你自己合法取得使用授权——REA 不提供任何工具许可或激活，也明确禁止使用破解、盗版或绕过许可限制的方式。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>REA 把「逆向工程」这件过去门槛很高的事，变成了「用自然语言提问就能拿到可验证结论和实现草稿」的体验。对于想研究竞品功能、做软件互操作性、或单纯好奇「它是怎么做到的」开发者来说，是一个非常值得一试的工具。</p>
+<p>要上手，记住三步走就够了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 配置智能体</span></span><br><span class="line">npx rea-agents setup</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 在智能体里提问，或直接终端分析 JS/Electron</span></span><br><span class="line">npx -y rea-agents@latest analyze-javascript-application /path/to/app --json</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 保持更新</span></span><br><span class="line">rea update</span><br></pre></td></tr></table></figure>
+
+<p>更多中文实操指南见 <a target="_blank" rel="noopener" href="https://rea.tools/zh-CN/guides/">https://rea.tools/zh-CN/guides/</a>。</p>
+
+      <a class="back-home mdui-btn mdui-ripple" href="/"><i class="mdui-icon material-icons">arrow_back</i> 返回首页</a>
+     </div>
+    </div>
+   </div>
+
+   <div id="footer" class="footer">
+    <p class="remark">
+      <br>
+      
+      <br>Powered By <a href="https://hexo.io/" target="_blank"> Hexo </a> And <a href="https://mdui.org" target="_blank">MDUI</a>.<br /> Theme ❤ <a href="https://kuri.ink/" target="">kuri</a>. 
+
+    </p>
+   </div>
+  </div>
+ </body>
+</html>
