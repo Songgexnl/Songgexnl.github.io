@@ -9,8 +9,8 @@ github: https://github.com/Songgexnl  # Github 个人主页地址
 background: # 背景，支持图片与视频（mp4/webm），可混排多张轮播
   # 视频 + 图片 降级：视频作主背景，图片铺在底层；视频加载失败/被拦截/
   # 系统开启“减少动态效果”或浏览器省流时，自动回落到图片。
-  - /images/7.mp4          # 主背景：视频
-  - /images/7.jpg          # 兜底背景：图片（放到 source/images/7.jpg）
+  - /images/7.mp4          # 主背景：视频（把文件放到 source/images/7.mp4）
+  - /images/6.jpg          # 兜底背景：图片（放到 source/images/6.jpg）
   - https://api.ee123.net/img/bingimg/dayimg.jpg  # 远程兜底，未放本地文件时也有背景
 iconfont: /css/iconfont.css
 
