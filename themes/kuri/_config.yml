@@ -6,8 +6,12 @@ nickname: Songgexnl  # 昵称
 motto: 记录技术与生活的一点一滴  # 一句话简介
 logo:  # 头像
 github: https://github.com/Songgexnl  # Github 个人主页地址
-background: # 背景图片
+background: # 背景，支持图片与视频（mp4/webm），可混排多张轮播
+  # 远程图片（当前使用）：
   - https://api.ee123.net/img/bingimg/dayimg.jpg
+  # 本地文件：先放到 source/images/ 目录，然后用 /images/文件名 引用，例如：
+  # - /images/bg.jpg        # 本地图片
+  # - /images/bg.mp4        # 本地视频（自动静音循环播放）
 iconfont: /css/iconfont.css
 
 # SEO / 搜索引擎优化
