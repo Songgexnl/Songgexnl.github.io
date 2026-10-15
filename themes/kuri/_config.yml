@@ -7,11 +7,11 @@ motto: 记录技术与生活的一点一滴  # 一句话简介
 logo:  # 头像
 github: https://github.com/Songgexnl  # Github 个人主页地址
 background: # 背景，支持图片与视频（mp4/webm），可混排多张轮播
-  # 远程图片（当前使用）：
-  - https://api.ee123.net/img/bingimg/dayimg.jpg
-  # 本地文件：先放到 source/images/ 目录，然后用 /images/文件名 引用，例如：
-  # - /images/bg.jpg        # 本地图片
-  # - /images/bg.mp4        # 本地视频（自动静音循环播放）
+  # 视频 + 图片 降级：视频作主背景，图片铺在底层；视频加载失败/被拦截/
+  # 系统开启“减少动态效果”或浏览器省流时，自动回落到图片。
+  - /images/7.mp4          # 主背景：视频
+  - /images/7.jpg          # 兜底背景：图片（放到 source/images/7.jpg）
+  - https://api.ee123.net/img/bingimg/dayimg.jpg  # 远程兜底，未放本地文件时也有背景
 iconfont: /css/iconfont.css
 
 # SEO / 搜索引擎优化

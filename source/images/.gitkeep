@@ -1,0 +1,5 @@
+# 把背景素材放在这个目录：
+#   - 7.mp4   （视频主背景，可改名，但需与主题 _config.yml 中的 background 一致）
+#   - 7.jpg   （图片兜底背景）
+# 文件名随意，只要和 themes/kuri/_config.yml 里 background 配置的路径对应即可。
+# 例如改成 background: - /images/mybg.mp4 / - /images/mybg.jpg
