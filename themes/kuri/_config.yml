@@ -23,6 +23,9 @@ sidebar:
     我的第一篇测试文章: # 项目名称
       - /2026/10/15/hello-hexo/ # 超链接
       - 测试文章 # MDUI 鼠标悬停工具提示
+    如何使用 REA：逆向一切的工具: # 项目名称
+      - /2026/10/15/rea-usage-intro/ # 超链接
+      - REA 逆向工具 # MDUI 鼠标悬停工具提示
 
 sidebar_color: 
   A1: # 类别名称
