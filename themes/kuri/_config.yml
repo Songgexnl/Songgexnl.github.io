@@ -1,0 +1,63 @@
+# kuri Theme Config @ version 1.0.0
+# website: https://kuri.ink | cl@kuri.ink
+
+# Yourself / 个人信息
+nickname: Songgexnl  # 昵称
+motto: 记录技术与生活的一点一滴  # 一句话简介
+logo:  # 头像
+github: https://github.com/Songgexnl  # Github 个人主页地址
+background: # 背景图片
+  - https://api.ee123.net/img/bingimg/dayimg.jpg
+iconfont: /css/iconfont.css
+
+# SEO / 搜索引擎优化
+fav: /images/fav.png
+
+# Sidebar / 侧边栏
+sidebar:
+  A1: # 类别名称
+    B1: # 项目名称
+      - https://example.com/ # 超链接
+      - example # MDUI 鼠标悬停工具提示
+  文章: # 类别名称
+    我的第一篇测试文章: # 项目名称
+      - /2026/10/15/hello-hexo/ # 超链接
+      - 测试文章 # MDUI 鼠标悬停工具提示
+
+sidebar_color: 
+  A1: # 类别名称
+    - near_me # 图标
+    - mdui-text-color-blue # 图标颜色
+  文章: # 类别名称
+    - library_books # 图标
+    - mdui-text-color-green # 图标颜色
+
+# Header / 页眉信息
+chizaobook: true # true / false 在页眉显示摛藻好句功能
+
+# Social / 社交按钮
+social:
+  C1: # 项目名称
+    - https://github.com/Songgexnl # 超链接
+    - GitHub # MDUI 鼠标悬停工具提示
+    - iconfont icongithub # 图标
+
+# Footer / 页脚信息
+## copyright / 版权
+author:  # 作者名称
+## remark / 备注
+remark: ''
+## Regist / 备案
+regist: ''
+
+# tools / 工具
+analysis: 
+  platform: 51.la
+  id: 
+  cd: 
+aplayer: 
+  enable: false
+  platform: 
+  type: 
+  id: 
+  fixed: true
