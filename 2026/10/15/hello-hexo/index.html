@@ -14,6 +14,24 @@
   <script src="//cdn.kuri.ink/js/mdui/mdui.min.js" async></script>
   <style>
    @import url("/css/iconfont.css");
+   /* 覆盖主题的绝对定位垂直居中：文章页改为常规文档流，避免顶部被固定导航栏遮挡 */
+   .post-container {
+     position: relative;
+     top: 0;
+     left: 0;
+     transform: none;
+     padding-top: 88px;
+     padding-bottom: 56px;
+   }
+   /* 覆盖主题按“个人名片”设计的窄卡片：文章内容区域加宽、左对齐 */
+   .post-card {
+     width: min(92%, 960px) !important;
+     text-align: left;
+     line-height: 1.8;
+   }
+   .post-card img { max-width: 100%; height: auto; }
+   .post-card pre { overflow-x: auto; text-align: left; }
+   .post-card table { display: block; overflow-x: auto; }
    .post-meta { color: #999; font-size: 14px; margin-bottom: 24px; }
    .post-meta a { color: #999; margin-right: 8px; }
    .post-title { margin-bottom: 8px; }
@@ -22,22 +40,52 @@
  <meta name="generator" content="Hexo 8.1.2"></head>
  <body>
    <script>
-    let images = "https://api.ee123.net/img/bingimg/dayimg.jpg"
-    images = images.split(',')
+    // 背景列表：支持图片（jpg/png/webp...）与视频（mp4/webm/ogg/mov），
+    // 可混合配置、支持远程 URL 或本地路径（本地文件放到 source/images/ 下，用 /images/xxx 引用）
+    let bgList = "https://api.ee123.net/img/bingimg/dayimg.jpg".split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     let currentIndex = 0;
 
-    function changeBackground() {
-        //document.getElementById("bg").style.opacity = 1; // 渐隐
-        setTimeout(() => {
-            document.getElementById("bg").style.backgroundImage = `url(${images[currentIndex]})`;
-            document.getElementById("bg").style.opacity = 1; // 渐显
-            currentIndex = (currentIndex + 1) % images.length;
-        }, 1000); // 与transition时间一致
+    function isVideo(url) {
+        return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
     }
 
-    changeBackground()
-    setInterval(changeBackground, 15000); // 每15秒切换一次背景
+    function mountVideo(url) {
+        let old = document.getElementById("bg-video");
+        if (old) old.remove();
+        let v = document.createElement("video");
+        v.id = "bg-video";
+        v.src = url;
+        v.autoplay = true;
+        v.muted = true;      // 浏览器要求静音才能自动播放
+        v.loop = true;
+        v.playsInline = true;
+        v.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;";
+        document.body.prepend(v);
+        document.getElementById("bg").style.backgroundImage = "none";
+    }
+
+    function mountImage(url) {
+        let old = document.getElementById("bg-video");
+        if (old) old.remove();
+        document.getElementById("bg").style.backgroundImage = "url(" + url + ")";
+    }
+
+    function changeBackground() {
+        setTimeout(function () {
+            if (!bgList.length) return;
+            let item = bgList[currentIndex];
+            currentIndex = (currentIndex + 1) % bgList.length;
+            if (isVideo(item)) { mountVideo(item); } else { mountImage(item); }
+        }, 1000);
+    }
+
+    changeBackground();
+    // 多个背景时每 15 秒轮换；只有一个（或视频）时轮换无害，会重复加载同一项
+    if (bgList.length > 1) {
+        setInterval(changeBackground, 15000);
+    }
 </script>
+
   <div class="mdui-drawer-body-left mdui-appbar-with-toolbar mdui-theme-layout-auto mdui-loaded">
    <div id="bg" class="index_bg"></div>
    <div>
@@ -115,8 +163,8 @@
     </div>
    </div>
 
-   <div id="container" class="container">
-    <div class="card" style="margin-top: 1%;">
+   <div id="container" class="container post-container">
+    <div class="card post-card" style="margin-top: 0;">
      <div id="card-content" class="card-content mdui-typo">
       <h1 class="post-title">我的第一篇测试文章</h1>
       <div class="post-meta">
