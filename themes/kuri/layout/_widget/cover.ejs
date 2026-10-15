@@ -35,6 +35,7 @@
             v.loop = true;
             v.playsInline = true;
             v.setAttribute("muted", "");
+            v.setAttribute("preload", "auto");
             v.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;";
             // 视频加载/播放失败（被拦截、格式不支持、网络错误）时，移除自己，露出底层图片
             v.addEventListener("error", function () { v.remove(); setBaseImage(baseImage); });
