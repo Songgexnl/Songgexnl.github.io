@@ -41,7 +41,7 @@
  <body>
    <script>
     (function () {
-        let rawList = "/images/7.mp4,/images/6.jpg,https://api.ee123.net/img/bingimg/dayimg.jpg".split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        let rawList = "/images/7.mp4,/images/6.jpg,/images/5.jpg,/images/4.jpg,https://api.ee123.net/img/bingimg/dayimg.jpg".split(',').map(function (s) { return s.trim(); }).filter(Boolean);
 
         // 系统开启“减少动态效果”或浏览器“省流”时，剔除视频，只用图片
         let prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
