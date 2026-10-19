@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="utf-8" />
+  <title>如何使用 AgentScope 2.0：从零搭建生产级智能体 - Songgexnl 的小站</title>
+  <link rel="icon" href="/images/fav.png" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <meta name="keywords" content="blog, hexo, kuri" />
+  <meta name="description" content="一个用 Hexo 搭建的个人博客" />
+  <link rel="canonical" href="https://songgexnl.github.io/2026/10/19/agentscope-2-usage/" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/mdui.css" importance="high"/>
+  <script src="//cdn.kuri.ink/js/mdui/mdui.min.js" async></script>
+  <style>
+   @import url("/css/iconfont.css");
+   /* 覆盖主题的绝对定位垂直居中：文章页改为常规文档流，避免顶部被固定导航栏遮挡 */
+   .post-container {
+     position: relative;
+     top: 0;
+     left: 0;
+     transform: none;
+     padding-top: 88px;
+     padding-bottom: 56px;
+   }
+   /* 覆盖主题按“个人名片”设计的窄卡片：文章内容区域加宽、左对齐 */
+   .post-card {
+     width: min(92%, 960px) !important;
+     text-align: left;
+     line-height: 1.8;
+   }
+   .post-card img { max-width: 100%; height: auto; }
+   .post-card pre { overflow-x: auto; text-align: left; }
+   .post-card table { display: block; overflow-x: auto; }
+   .post-meta { color: #999; font-size: 14px; margin-bottom: 24px; }
+   .post-meta a { color: #999; margin-right: 8px; }
+   .post-title { margin-bottom: 8px; }
+   .back-home { margin-top: 32px; display: inline-block; }
+  </style>
+ <meta name="generator" content="Hexo 8.1.2"></head>
+ <body>
+   <script>
+    (function () {
+        let rawList = "/images/7.mp4,/images/6.jpg,/images/5.jpg,/images/4.jpg,https://api.ee123.net/img/bingimg/dayimg.jpg".split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+
+        // 系统开启“减少动态效果”或浏览器“省流”时，剔除视频，只用图片
+        let prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let saveData = navigator.connection && navigator.connection.saveData;
+
+        function isVideo(url) { return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url); }
+
+        let usable = rawList.filter(function (u) {
+            if (!isVideo(u)) return true;
+            return !(prefersReduced || saveData);
+        });
+
+        let heroVideo = usable.find(isVideo);                 // 主背景视频（若启用）
+        let images = usable.filter(function (u) { return !isVideo(u); });
+        let baseImage = images[0];                            // 底层兜底图片
+
+        // 空值保护：#bg 可能尚未渲染（本脚本位于 <div id="bg"> 之前）
+        function setBaseImage(url) {
+            let el = document.getElementById("bg");
+            if (el && url) el.style.backgroundImage = "url(" + url + ")";
+        }
+
+        function mountVideo(url) {
+            let old = document.getElementById("bg-video");
+            if (old) old.remove();
+            let v = document.createElement("video");
+            v.id = "bg-video";
+            v.src = url;
+            v.autoplay = true;
+            v.muted = true;
+            v.defaultMuted = true;
+            v.loop = true;
+            v.playsInline = true;
+            v.setAttribute("muted", "");
+            v.setAttribute("preload", "auto");
+            v.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;";
+            // 视频加载/播放失败（被拦截、格式不支持、网络错误）时，移除自己，露出底层图片
+            v.addEventListener("error", function () { v.remove(); setBaseImage(baseImage); });
+            // 关键修复：把视频插入到与 #bg 同一个容器内、#bg 之后，
+            // 避免被外层 wrapper 的层叠上下文盖住（否则视频永远在 #bg 图片之下不可见）
+            let bgEl = document.getElementById("bg");
+            if (bgEl && bgEl.parentNode) {
+                bgEl.parentNode.insertBefore(v, bgEl.nextSibling);
+            } else {
+                document.body.appendChild(v);
+            }
+            let p = v.play();
+            if (p && p.catch) p.catch(function () {}); // 自动播放被拒则静默，保留图片兜底
+        }
+
+        function mountImage(url) {
+            let old = document.getElementById("bg-video");
+            if (old) old.remove();
+            setBaseImage(url);
+        }
+
+        // DOM 就绪后再初始化（避免 #bg 为 null 导致报错中断整个脚本）
+        function init() {
+            setBaseImage(baseImage);
+            if (heroVideo) {
+                // 视频作主背景，持续播放；底层图片始终兜底（不再 15 秒轮换）
+                mountVideo(heroVideo);
+            } else if (images.length) {
+                // 没有（可用）视频：在图片之间轮换
+                let idx = 0;
+                let rotate = function () {
+                    mountImage(images[idx]);
+                    idx = (idx + 1) % images.length;
+                };
+                setTimeout(rotate, 1000);
+                if (images.length > 1) setInterval(rotate, 15000);
+            }
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", init);
+        } else {
+            setTimeout(init, 0);
+        }
+    })();
+</script>
+
+  <div class="mdui-drawer-body-left mdui-appbar-with-toolbar mdui-theme-layout-auto mdui-loaded">
+   <div id="bg" class="index_bg"></div>
+   <div>
+    <header class="appbar mdui-appbar mdui-appbar-fixed" importance="high"> 
+    <div class="mdui-toolbar mdui-color-theme card-content"> 
+     <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" mdui-drawer="{target: '#main-drawer', swipe: true}"> <i class="mdui-icon material-icons" mdui-tooltip="{content: '菜单'}">menu</i> </span> 
+     <div class="mdui-toolbar-spacer">
+       
+      <chizaobook style="line-height: 1em; color:#F5F5F5;;"> 
+       <script>
+        let app = document.createElement('script');
+            app.src = 'https://cdn.jsdelivr.net/gh/ChizaoProject/chizaobook@master/app.js';
+            app.async = true;
+            app.onload = function () {
+              chizaobook = new Chizaobook({
+                container: "chizaobook", // string
+                packageSource: "https://cdn.jsdelivr.net/gh/ChizaoProject/Packages@master/package_source.json", // string
+                packageType: null // int
+          })
+          chizaobook.selector();
+          };
+        document.head.appendChild(app);
+       </script> 
+       <!--<div class="mdui-chip" style="margin: auto; position: fixed; transform: translate(0, -50%);">
+             <span id="time" class="mdui-chip-title" style="transform: translate(0, -50%);"></span>
+             <script>
+               var datetime = new Date();
+               console.log(datetime);
+             </script>
+           </div>
+           --> 
+      </chizaobook>
+      
+     </div> 
+     <a href="https://github.com/Songgexnl" target="_blank" class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" mdui-tooltip="{content: 'Github'}"> 
+      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewbox="0 0 36 36" enable-background="new 0 0 36 36" xml:space="preserve" class="mdui-icon" style="width: 24px;height:24px;"> 
+       <path fill-rule="evenodd" clip-rule="evenodd" fill="#ffffff" d="M18,1.4C9,1.4,1.7,8.7,1.7,17.7c0,7.2,4.7,13.3,11.1,15.5c0.8,0.1,1.1-0.4,1.1-0.8c0-0.4,0-1.4,0-2.8c-4.5,1-5.5-2.2-5.5-2.2c-0.7-1.9-1.8-2.4-1.8-2.4c-1.5-1,0.1-1,0.1-1c1.6,0.1,2.5,1.7,2.5,1.7c1.5,2.5,3.8,1.8,4.7,1.4c0.1-1.1,0.6-1.8,1-2.2c-3.6-0.4-7.4-1.8-7.4-8.1c0-1.8,0.6-3.2,1.7-4.4c-0.2-0.4-0.7-2.1,0.2-4.3c0,0,1.4-0.4,4.5,1.7c1.3-0.4,2.7-0.5,4.1-0.5c1.4,0,2.8,0.2,4.1,0.5c3.1-2.1,4.5-1.7,4.5-1.7c0.9,2.2,0.3,3.9,0.2,4.3c1,1.1,1.7,2.6,1.7,4.4c0,6.3-3.8,7.6-7.4,8c0.6,0.5,1.1,1.5,1.1,3c0,2.2,0,3.9,0,4.5c0,0.4,0.3,0.9,1.1,0.8c6.5-2.2,11.1-8.3,11.1-15.5C34.3,8.7,27,1.4,18,1.4z"></path> 
+      </svg> </a> 
+    </div> 
+   </header> 
+    <div class="mdui-drawer mdui-drawer-close sidebar" id="main-drawer">
+     <div class="mdui-list" mdui-collapse="{accordion: true}" style="margin-bottom: 75px;">
+      
+      <div class="mdui-collapse-item">
+       <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
+        <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-green">library_books</i>
+        <div class="mdui-list-item-content">文章</div>
+        <i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
+       </div>
+       
+         <div class="mdui-collapse-item-body mdui-list">
+          <a href="/2026/10/15/rea-usage-intro/" target="_blank" mdui-tooltip="{content: 'REA 逆向工具'}" class="mdui-list-item mdui-ripple">如何使用 REA：逆向一切的工具</a>
+         </div>
+         
+         <div class="mdui-collapse-item-body mdui-list">
+          <a href="/2026/10/19/agentscope-2-usage/" target="_blank" mdui-tooltip="{content: 'AgentScope 2.0 教程'}" class="mdui-list-item mdui-ripple">如何使用 AgentScope 2.0：从零搭建生产级智能体</a>
+         </div>
+         
+      </div>
+      
+     </div>
+    </div>
+   </div>
+
+   <div id="container" class="container post-container">
+    <div class="card post-card" style="margin-top: 0;">
+     <div id="card-content" class="card-content mdui-typo">
+      <h1 class="post-title">如何使用 AgentScope 2.0：从零搭建生产级智能体</h1>
+      <div class="post-meta">
+       2026-10-19
+       
+         
+           &nbsp;/&nbsp;<a href="/categories/技术教程/">技术教程</a>
+         
+       
+       
+         
+           &nbsp;#<a href="/tags/AgentScope/">AgentScope</a>
+         
+           &nbsp;#<a href="/tags/智能体框架/">智能体框架</a>
+         
+           &nbsp;#<a href="/tags/LLM/">LLM</a>
+         
+           &nbsp;#<a href="/tags/Agent/">Agent</a>
+         
+           &nbsp;#<a href="/tags/多智能体/">多智能体</a>
+         
+       
+      </div>
+      <p>在 1.x 时代，AgentScope 已经是一个友好的多智能体框架。而 <strong>AgentScope 2.0</strong> 是一次彻底的重构：它把「安全、高效、灵活、完备」作为核心目标，原生支持<strong>多租户、多会话管理与分布式部署</strong>，并补齐了工具审计、人机协同（HITL）、沙箱隔离等企业在生产环境中真正需要的能力。</p>
+<p>本文基于官方文档（<a target="_blank" rel="noopener" href="https://docs.agentscope.io/zh/versions/2.0.10">AgentScope 2.0.10 中文文档</a>）整理，带你从安装到跑通多智能体团队，一步步上手这个框架。</p>
+<blockquote>
+<p>官方文档：<a target="_blank" rel="noopener" href="https://docs.agentscope.io/zh/versions/2.0.10">https://docs.agentscope.io/zh/versions/2.0.10</a><br>注意：<strong>2.0 与 1.x 存在破坏性变更，请勿混用 API</strong>。</p>
+</blockquote>
+<h2 id="一、AgentScope-2-0-是什么"><a href="#一、AgentScope-2-0-是什么" class="headerlink" title="一、AgentScope 2.0 是什么"></a>一、AgentScope 2.0 是什么</h2><p>一句话概括：它是一款<strong>安全、高效、灵活且完备的生产级智能体框架</strong>。</p>
+<ul>
+<li><strong>安全</strong>：工具审计 + 人机协同（HITL）权限系统 + 沙箱隔离，三位一体。</li>
+<li><strong>高效</strong>：按工具特性柔性编排，支持多工具并发或顺序智能调度。</li>
+<li><strong>灵活</strong>：智能体与工具双重中间件，无侵入地定制运行时行为。</li>
+<li><strong>完备</strong>：从轻量 UI、开箱 SDK 到多租户后端及分布式部署，工具链完整。</li>
+<li><strong>全栈</strong>：覆盖单智能体推理到企业级应用的全生命周期。</li>
+</ul>
+<p>它的核心模块包括：消息与事件、智能体（Agent）、模型（Model）、工具（Tool）、上下文管理、流水线（Pipeline）、权限系统、工作区、RAG、长期记忆，以及开箱即用的「智能体即服务（AaaS）」部署能力。</p>
+<h2 id="二、安装"><a href="#二、安装" class="headerlink" title="二、安装"></a>二、安装</h2><p>AgentScope 2.0 要求 <strong>Python 3.11 及以上</strong>，推荐使用 <code>uv</code> 包管理器。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 通过 PyPI 安装</span></span><br><span class="line">uv pip install agentscope</span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证安装</span></span><br><span class="line">python -c <span class="string">&quot;import agentscope; print(agentscope.__version__)&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>如需额外能力（语音、RAG、沙箱等），可安装完整依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Windows</span></span><br><span class="line">uv pip install agentscope[full]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Mac / Linux</span></span><br><span class="line">uv pip install agentscope\[full\]</span><br></pre></td></tr></table></figure>
+
+<p>也可以从源码安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/agentscope-ai/agentscope</span><br><span class="line"><span class="built_in">cd</span> agentscope</span><br><span class="line">uv pip install -e .</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、核心概念速览"><a href="#三、核心概念速览" class="headerlink" title="三、核心概念速览"></a>三、核心概念速览</h2><p>在写代码前，先建立几个关键心智模型：</p>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Model（模型）</strong></td>
+<td>通过「凭证 Credential」接入各家大模型 API，如 <code>DashScopeChatModel</code>、<code>OpenAIChatModel</code></td>
+</tr>
+<tr>
+<td><strong>Agent（智能体）</strong></td>
+<td>无状态的推理-行动（ReAct）循环引擎，由 <code>name</code> + <code>system_prompt</code> + <code>model</code> + <code>toolkit</code> 组装</td>
+</tr>
+<tr>
+<td><strong>Tool（工具）</strong></td>
+<td>智能体可调用的能力，支持原生 Python 函数、<code>MCP</code> 服务与外部 <code>Skill</code></td>
+</tr>
+<tr>
+<td><strong>Msg &#x2F; Event（消息与事件）</strong></td>
+<td>智能体通信基本单元；<code>reply_stream</code> 通过事件流向前端增量推送</td>
+</tr>
+<tr>
+<td><strong>Context（上下文）</strong></td>
+<td>智能体的「工作记忆」，可压缩、卸载、主动检索</td>
+</tr>
+<tr>
+<td><strong>Pipeline（流水线）</strong></td>
+<td>固化多智能体协作逻辑，如团队流水线 <code>TeamPipeline</code></td>
+</tr>
+</tbody></table>
+<h2 id="四、5-分钟快速开始"><a href="#四、5-分钟快速开始" class="headerlink" title="四、5 分钟快速开始"></a>四、5 分钟快速开始</h2><p>下面这个例子已经跑通「创建模型 → 创建智能体 → 运行对话」的完整链路。运行前请先设置环境变量 <code>DASHSCOPE_API_KEY</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> agentscope.agent <span class="keyword">import</span> Agent</span><br><span class="line"><span class="keyword">from</span> agentscope.credential <span class="keyword">import</span> DashScopeCredential</span><br><span class="line"><span class="keyword">from</span> agentscope.event <span class="keyword">import</span> EventType</span><br><span class="line"><span class="keyword">from</span> agentscope.message <span class="keyword">import</span> UserMsg</span><br><span class="line"><span class="keyword">from</span> agentscope.model <span class="keyword">import</span> DashScopeChatModel</span><br><span class="line"><span class="keyword">from</span> agentscope.tool <span class="keyword">import</span> Toolkit, Bash, Read, Write, Edit</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>() -&gt; <span class="literal">None</span>:</span><br><span class="line">    agent = Agent(</span><br><span class="line">        name=<span class="string">&quot;Friday&quot;</span>,</span><br><span class="line">        system_prompt=<span class="string">&quot;You are a helpful assistant named Friday.&quot;</span>,</span><br><span class="line">        model=DashScopeChatModel(</span><br><span class="line">            credential=DashScopeCredential(</span><br><span class="line">                api_key=os.getenv(<span class="string">&quot;DASHSCOPE_API_KEY&quot;</span>),</span><br><span class="line">            ),</span><br><span class="line">            model=<span class="string">&quot;qwen-plus&quot;</span>,</span><br><span class="line">        ),</span><br><span class="line">        toolkit=Toolkit(tools=[Bash(), Read(), Write(), Edit()]),</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    user_msg = UserMsg(name=<span class="string">&quot;user&quot;</span>, content=<span class="string">&quot;Hello, who are you?&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 方式一：等待最终回复</span></span><br><span class="line">    reply_msg = <span class="keyword">await</span> agent.reply(user_msg)</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 方式二：流式获取增量事件（文本片段、工具调用等）</span></span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">for</span> event <span class="keyword">in</span> agent.reply_stream(user_msg):</span><br><span class="line">        <span class="keyword">match</span> event.<span class="built_in">type</span>:</span><br><span class="line">            <span class="keyword">case</span> EventType.TEXT_BLOCK_DELTA:</span><br><span class="line">                ...  <span class="comment"># 流式文本片段，追加到界面或标准输出</span></span><br><span class="line">            <span class="keyword">case</span> EventType.TOOL_CALL_START:</span><br><span class="line">                ...  <span class="comment"># 智能体即将调用工具，展示调用信息</span></span><br><span class="line">            <span class="keyword">case</span> _:</span><br><span class="line">                ...  <span class="comment"># 其他事件：思考块、工具结果、回复结束等</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure>
+
+<h2 id="五、接入大模型（Model）"><a href="#五、接入大模型（Model）" class="headerlink" title="五、接入大模型（Model）"></a>五、接入大模型（Model）</h2><p>所有模型类都遵循 <code>Model(credential=..., model=...)</code> 的模式，切换厂商只需替换凭证与模型类：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># DashScope（通义千问）</span></span><br><span class="line"><span class="keyword">from</span> agentscope.model <span class="keyword">import</span> DashScopeChatModel</span><br><span class="line"><span class="keyword">from</span> agentscope.credential <span class="keyword">import</span> DashScopeCredential</span><br><span class="line">model = DashScopeChatModel(</span><br><span class="line">    credential=DashScopeCredential(api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>),</span><br><span class="line">    model=<span class="string">&quot;qwen-max&quot;</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># OpenAI</span></span><br><span class="line"><span class="keyword">from</span> agentscope.model <span class="keyword">import</span> OpenAIChatModel</span><br><span class="line"><span class="keyword">from</span> agentscope.credential <span class="keyword">import</span> OpenAICredential</span><br><span class="line">model = OpenAIChatModel(</span><br><span class="line">    credential=OpenAICredential(api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>),</span><br><span class="line">    model=<span class="string">&quot;gpt-4o&quot;</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Anthropic / Gemini / Ollama 同理</span></span><br><span class="line"><span class="keyword">from</span> agentscope.model <span class="keyword">import</span> AnthropicChatModel, GeminiChatModel, OllamaChatModel</span><br><span class="line"><span class="keyword">from</span> agentscope.credential <span class="keyword">import</span> AnthropicCredential, GeminiCredential, OllamaCredential</span><br><span class="line">claude = AnthropicChatModel(credential=AnthropicCredential(api_key=<span class="string">&quot;...&quot;</span>), model=<span class="string">&quot;claude-sonnet-4-5&quot;</span>)</span><br><span class="line">gemini = GeminiChatModel(credential=GeminiCredential(api_key=<span class="string">&quot;...&quot;</span>), model=<span class="string">&quot;gemini-2.5-pro&quot;</span>)</span><br><span class="line">ollama = OllamaChatModel(credential=OllamaCredential(host=<span class="string">&quot;http://localhost:11434&quot;</span>), model=<span class="string">&quot;qwen3:8b&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>模型还支持流式、重试、专属参数等配置：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">model = DashScopeChatModel(</span><br><span class="line">    credential=DashScopeCredential(api_key=os.environ[<span class="string">&quot;DASHSCOPE_API_KEY&quot;</span>]),</span><br><span class="line">    model=<span class="string">&quot;qwen-plus&quot;</span>,</span><br><span class="line">    stream=<span class="literal">True</span>,            <span class="comment"># 是否流式输出</span></span><br><span class="line">    max_retries=<span class="number">3</span>,          <span class="comment"># API 失败最大重试次数</span></span><br><span class="line">    parameters=DashScopeChatModel.Parameters(</span><br><span class="line">        parallel_tool_calls=<span class="literal">False</span>,</span><br><span class="line">    ),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>也可以直接调用模型（不套智能体）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">msgs = [UserMsg(name=<span class="string">&quot;user&quot;</span>, content=<span class="string">&quot;Count from 1 to 5.&quot;</span>)]</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> chunk <span class="keyword">in</span> <span class="keyword">await</span> model(msgs):</span><br><span class="line">    <span class="keyword">if</span> chunk.is_last:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;Final:&quot;</span>, chunk.content)   <span class="comment"># 完整累积内容</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;Delta:&quot;</span>, chunk.content)   <span class="comment"># 仅增量</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="六、配置智能体（Agent）"><a href="#六、配置智能体（Agent）" class="headerlink" title="六、配置智能体（Agent）"></a>六、配置智能体（Agent）</h2><p><code>Agent(...)</code> 的必填参数是 <code>name</code>、<code>system_prompt</code>、<code>model</code>，其余皆可按需配置：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code> &#x2F; <code>system_prompt</code> &#x2F; <code>model</code></td>
+<td>必填：标识、系统提示、推理模型</td>
+</tr>
+<tr>
+<td><code>toolkit</code></td>
+<td>管理工具、MCP 客户端、技能与工具组</td>
+</tr>
+<tr>
+<td><code>context_config</code></td>
+<td>上下文压缩阈值、图片数量、工具结果长度限制</td>
+</tr>
+<tr>
+<td><code>react_config</code></td>
+<td>最大迭代次数、结构化输出宽限、拒绝处理策略</td>
+</tr>
+<tr>
+<td><code>middlewares</code></td>
+<td>在回复&#x2F;推理&#x2F;行动&#x2F;模型调用等钩子上做无侵入扩展</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td>保存上下文、权限上下文与会话状态（多轮&#x2F;持久化）</td>
+</tr>
+</tbody></table>
+<p><strong>最简配置：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">agent = Agent(</span><br><span class="line">    name=<span class="string">&quot;my_agent&quot;</span>,</span><br><span class="line">    system_prompt=<span class="string">&quot;你是一个有帮助的助手。&quot;</span>,</span><br><span class="line">    model=DashScopeChatModel(</span><br><span class="line">        credential=DashScopeCredential(api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>),</span><br><span class="line">        model=<span class="string">&quot;qwen-max&quot;</span>,</span><br><span class="line">    ),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>接入工具 &#x2F; MCP &#x2F; 技能：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> agentscope.agent <span class="keyword">import</span> Agent</span><br><span class="line"><span class="keyword">from</span> agentscope.tool <span class="keyword">import</span> Toolkit, Bash, Edit, Grep, Read, Write</span><br><span class="line"><span class="keyword">from</span> agentscope.mcp <span class="keyword">import</span> MCPClient, HttpMCPConfig</span><br><span class="line"><span class="keyword">from</span> agentscope.model <span class="keyword">import</span> DashScopeChatModel</span><br><span class="line"><span class="keyword">from</span> agentscope.credential <span class="keyword">import</span> DashScopeCredential</span><br><span class="line"></span><br><span class="line">agent = Agent(</span><br><span class="line">    name=<span class="string">&quot;my_agent&quot;</span>,</span><br><span class="line">    system_prompt=<span class="string">&quot;你是一个有帮助的助手。&quot;</span>,</span><br><span class="line">    model=DashScopeChatModel(</span><br><span class="line">        credential=DashScopeCredential(api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>),</span><br><span class="line">        model=<span class="string">&quot;qwen-max&quot;</span>,</span><br><span class="line">    ),</span><br><span class="line">    toolkit=Toolkit(</span><br><span class="line">        tools=[Bash(), Edit(), Grep(), Read(), Write()],</span><br><span class="line">        mcps=[</span><br><span class="line">            MCPClient(</span><br><span class="line">                name=<span class="string">&quot;amap&quot;</span>,</span><br><span class="line">                is_stateful=<span class="literal">False</span>,</span><br><span class="line">                mcp_config=HttpMCPConfig(</span><br><span class="line">                    url=<span class="string">f&quot;https://mcp.amap.com/mcp?key=<span class="subst">&#123;os.environ[<span class="string">&#x27;AMAP_API_KEY&#x27;</span>]&#125;</span>&quot;</span>,</span><br><span class="line">                ),</span><br><span class="line">            ),</span><br><span class="line">        ],</span><br><span class="line">        skills_or_loaders=[<span class="string">&quot;./skills&quot;</span>],</span><br><span class="line">    ),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>上下文与 ReAct 调优：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">agent = Agent(</span><br><span class="line">    name=<span class="string">&quot;my_agent&quot;</span>,</span><br><span class="line">    system_prompt=<span class="string">&quot;你是一个有帮助的助手。&quot;</span>,</span><br><span class="line">    model=DashScopeChatModel(</span><br><span class="line">        credential=DashScopeCredential(api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>),</span><br><span class="line">        model=<span class="string">&quot;qwen-max&quot;</span>,</span><br><span class="line">    ),</span><br><span class="line">    context_config=ContextConfig(</span><br><span class="line">        trigger_ratio=<span class="number">0.7</span>,      <span class="comment"># 使用 70% 上下文时触发压缩</span></span><br><span class="line">        reserve_ratio=<span class="number">0.2</span>,      <span class="comment"># 压缩后保留最近 20% 内容</span></span><br><span class="line">        tool_result_limit=<span class="number">1000</span>, <span class="comment"># 工具结果超过 1000 token 时截断</span></span><br><span class="line">        max_image_num=<span class="number">5</span>,        <span class="comment"># 只保留最近 5 张图片</span></span><br><span class="line">    ),</span><br><span class="line">    react_config=ReActConfig(</span><br><span class="line">        max_iters=<span class="number">30</span>,                       <span class="comment"># 最多 30 轮推理-行动迭代</span></span><br><span class="line">        structured_output_grace_iters=<span class="number">3</span>,     <span class="comment"># 为结构化输出追加的迭代</span></span><br><span class="line">        stop_on_reject=<span class="literal">True</span>,                <span class="comment"># 工具调用被拒绝时停止</span></span><br><span class="line">    ),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="七、运行智能体"><a href="#七、运行智能体" class="headerlink" title="七、运行智能体"></a>七、运行智能体</h2><h3 id="1-等待最终回复-reply"><a href="#1-等待最终回复-reply" class="headerlink" title="1. 等待最终回复 reply"></a>1. 等待最终回复 <code>reply</code></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">from</span> agentscope.message <span class="keyword">import</span> UserMsg</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    msg = UserMsg(name=<span class="string">&quot;user&quot;</span>, content=<span class="string">&quot;当前目录有哪些文件？&quot;</span>)</span><br><span class="line">    result = <span class="keyword">await</span> agent.reply(msg)</span><br><span class="line">    <span class="built_in">print</span>(result.get_text_content())</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure>
+
+<p>返回的 <code>Msg</code> 关键字段：</p>
+<ul>
+<li><code>content</code>：本次回复的全部内容块（文本、思考、工具调用与结果）</li>
+<li><code>finished_reason</code>：<code>completed</code> &#x2F; <code>interrupted</code> &#x2F; <code>exceed_max_iters</code> &#x2F; <code>error</code>（<code>None</code> 表示暂停中）</li>
+<li><code>structured_output</code>：传入 <code>structured_schema</code> 时校验后的结构化结果</li>
+<li><code>usage</code>：累计 token 数</li>
+</ul>
+<h3 id="2-流式回复-reply-stream"><a href="#2-流式回复-reply-stream" class="headerlink" title="2. 流式回复 reply_stream"></a>2. 流式回复 <code>reply_stream</code></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    msg = UserMsg(name=<span class="string">&quot;user&quot;</span>, content=<span class="string">&quot;总结一下 README 的内容。&quot;</span>)</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">for</span> event <span class="keyword">in</span> agent.reply_stream(msg):</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">hasattr</span>(event, <span class="string">&quot;delta&quot;</span>):</span><br><span class="line">            <span class="built_in">print</span>(event.delta, end=<span class="string">&quot;&quot;</span>, flush=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure>
+
+<p>如需在流末额外产出最终 <code>Msg</code>，传 <code>yield_final_msg=True</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> chunk <span class="keyword">in</span> agent.reply_stream(msg, yield_final_msg=<span class="literal">True</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(chunk, Msg):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;最终消息:&quot;</span>, chunk.get_text_content())</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-结构化输出"><a href="#3-结构化输出" class="headerlink" title="3. 结构化输出"></a>3. 结构化输出</h3><p>传入 Pydantic 模型，智能体会装配内置工具来提交符合 schema 的结果：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel, Field</span><br><span class="line"><span class="keyword">from</span> agentscope.message <span class="keyword">import</span> UserMsg</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">WeatherReport</span>(<span class="title class_ inherited__">BaseModel</span>):</span><br><span class="line">    city: <span class="built_in">str</span> = Field(description=<span class="string">&quot;城市名&quot;</span>)</span><br><span class="line">    temperature: <span class="built_in">float</span> = Field(description=<span class="string">&quot;摄氏温度&quot;</span>)</span><br><span class="line"></span><br><span class="line">result = <span class="keyword">await</span> agent.reply(</span><br><span class="line">    UserMsg(name=<span class="string">&quot;user&quot;</span>, content=<span class="string">&quot;杭州今天天气怎么样？&quot;</span>),</span><br><span class="line">    structured_schema=WeatherReport,</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(result.structured_output)  <span class="comment"># &#123;&quot;city&quot;: &quot;杭州&quot;, &quot;temperature&quot;: ...&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="4-多轮对话与状态持久化"><a href="#4-多轮对话与状态持久化" class="headerlink" title="4. 多轮对话与状态持久化"></a>4. 多轮对话与状态持久化</h3><p>进程内多轮可直接用 <code>reply(None)</code> 从当前状态继续；跨进程&#x2F;分布式则需要借助 <code>AgentState</code> + <code>RedisStorage</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">from</span> agentscope.agent <span class="keyword">import</span> Agent, AgentState</span><br><span class="line"><span class="keyword">from</span> agentscope.state <span class="keyword">import</span> AgentState</span><br><span class="line"><span class="keyword">from</span> agentscope.model <span class="keyword">import</span> DashScopeChatModel</span><br><span class="line"><span class="keyword">from</span> agentscope.credential <span class="keyword">import</span> DashScopeCredential</span><br><span class="line"><span class="keyword">from</span> agentscope.message <span class="keyword">import</span> UserMsg</span><br><span class="line"><span class="keyword">from</span> agentscope.app.storage <span class="keyword">import</span> RedisStorage</span><br><span class="line"></span><br><span class="line">USER_ID, AGENT_ID, SESSION_ID = <span class="string">&quot;user_123&quot;</span>, <span class="string">&quot;agent_456&quot;</span>, <span class="string">&quot;session_789&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> RedisStorage(host=<span class="string">&quot;localhost&quot;</span>, port=<span class="number">6379</span>) <span class="keyword">as</span> storage:</span><br><span class="line">        record = <span class="keyword">await</span> storage.get_session(</span><br><span class="line">            user_id=USER_ID, agent_id=AGENT_ID, session_id=SESSION_ID,</span><br><span class="line">        )</span><br><span class="line">        state = record.state <span class="keyword">if</span> record <span class="keyword">else</span> AgentState()</span><br><span class="line">        agent = Agent(</span><br><span class="line">            name=<span class="string">&quot;my_agent&quot;</span>,</span><br><span class="line">            system_prompt=<span class="string">&quot;你是一个有帮助的助手。&quot;</span>,</span><br><span class="line">            model=DashScopeChatModel(</span><br><span class="line">                credential=DashScopeCredential(api_key=<span class="string">&quot;YOUR_API_KEY&quot;</span>),</span><br><span class="line">                model=<span class="string">&quot;qwen-max&quot;</span>,</span><br><span class="line">            ),</span><br><span class="line">            state=state,</span><br><span class="line">        )</span><br><span class="line">        result = <span class="keyword">await</span> agent.reply(UserMsg(name=<span class="string">&quot;user&quot;</span>, content=<span class="string">&quot;继续之前的任务。&quot;</span>))</span><br><span class="line">        <span class="built_in">print</span>(result.get_text_content())</span><br><span class="line">        <span class="keyword">await</span> storage.update_session_state(</span><br><span class="line">            user_id=USER_ID, agent_id=AGENT_ID, session_id=SESSION_ID,</span><br><span class="line">            state=agent.state,</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>首次建会话用 <code>upsert_session</code>，后续轮次用 <code>update_session_state</code>，否则会 <code>KeyError</code>。</p>
+</blockquote>
+<h2 id="八、自定义工具（Python-Function-Tool）"><a href="#八、自定义工具（Python-Function-Tool）" class="headerlink" title="八、自定义工具（Python Function Tool）"></a>八、自定义工具（Python Function Tool）</h2><p>把任意 Python 函数暴露给智能体，首选 <code>FunctionTool</code> 适配器——它会从函数名、docstring、类型注解自动提取工具元数据：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> agentscope.tool <span class="keyword">import</span> FunctionTool, Toolkit</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_weather</span>(<span class="params">city: <span class="built_in">str</span>, unit: <span class="built_in">str</span> = <span class="string">&quot;celsius&quot;</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Get the current weather for a city.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        city: The city name to look up.</span></span><br><span class="line"><span class="string">        unit: Temperature unit, either &quot;celsius&quot; or &quot;fahrenheit&quot;.</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">f&quot;The weather in <span class="subst">&#123;city&#125;</span> is 22°<span class="subst">&#123;unit[<span class="number">0</span>].upper()&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">toolkit = Toolkit(tools=[FunctionTool(get_weather)])</span><br></pre></td></tr></table></figure>
+
+<p>当输入结构较复杂时，用 Pydantic 模型显式约束 schema：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel, Field</span><br><span class="line"><span class="keyword">from</span> agentscope.tool <span class="keyword">import</span> FunctionTool</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">WeatherInput</span>(<span class="title class_ inherited__">BaseModel</span>):</span><br><span class="line">    city: <span class="built_in">str</span></span><br><span class="line">    days: <span class="built_in">int</span> = Field(default=<span class="number">1</span>, ge=<span class="number">1</span>, le=<span class="number">7</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_forecast</span>(<span class="params">city: <span class="built_in">str</span>, days: <span class="built_in">int</span> = <span class="number">1</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    <span class="keyword">return</span> <span class="string">f&quot;<span class="subst">&#123;city&#125;</span> 未来 <span class="subst">&#123;days&#125;</span> 天天气晴朗&quot;</span></span><br><span class="line"></span><br><span class="line">weather_tool = FunctionTool(get_forecast, input_schema=WeatherInput)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>FunctionTool</code> 默认走 <code>ASK</code> 权限行为——每次调用都需要用户显式放行。若需精细的权限审查（如按输入判断只读），可继承 <code>ToolBase</code> 基类并实现 <code>check_permissions()</code>。</p>
+</blockquote>
+<h2 id="九、多智能体团队流水线（TeamPipeline）"><a href="#九、多智能体团队流水线（TeamPipeline）" class="headerlink" title="九、多智能体团队流水线（TeamPipeline）"></a>九、多智能体团队流水线（TeamPipeline）</h2><p><code>TeamPipeline</code> 由一个**队长（leader）<strong>与若干</strong>成员（members）**组成：队长通过 <code>TeamAssign</code> 工具把任务分派给成员，成员在各自上下文独立完成，最终回复作为工具结果交回队长。</p>
+<p>特点：队长只看到成员最终回复（上下文不被撑爆）、不同成员并发执行、成员间互不通信（结果总回到队长）。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> agentscope.agent <span class="keyword">import</span> Agent</span><br><span class="line"><span class="keyword">from</span> agentscope.console <span class="keyword">import</span> launch_console</span><br><span class="line"><span class="keyword">from</span> agentscope.credential <span class="keyword">import</span> DashScopeCredential</span><br><span class="line"><span class="keyword">from</span> agentscope.model <span class="keyword">import</span> DashScopeChatModel</span><br><span class="line"><span class="keyword">from</span> agentscope.pipeline <span class="keyword">import</span> TeamMember, TeamPipeline</span><br><span class="line"><span class="keyword">from</span> agentscope.tool <span class="keyword">import</span> Toolkit</span><br><span class="line"><span class="keyword">from</span> agentscope.workspace <span class="keyword">import</span> LocalWorkspace</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>() -&gt; <span class="literal">None</span>:</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> LocalWorkspace(workdir=<span class="string">&quot;./workspace&quot;</span>) <span class="keyword">as</span> workspace:</span><br><span class="line">        model = DashScopeChatModel(</span><br><span class="line">            credential=DashScopeCredential(api_key=os.getenv(<span class="string">&quot;DASHSCOPE_API_KEY&quot;</span>)),</span><br><span class="line">            model=<span class="string">&quot;qwen3.8-max&quot;</span>,</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        leader = Agent(</span><br><span class="line">            name=<span class="string">&quot;Leader&quot;</span>,</span><br><span class="line">            system_prompt=<span class="string">&quot;You&#x27;re a team leader named &#x27;Leader&#x27;.&quot;</span>,</span><br><span class="line">            model=model,</span><br><span class="line">            toolkit=Toolkit(),   <span class="comment"># 流水线会向其中注册 TeamAssign 工具</span></span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        researcher = Agent(</span><br><span class="line">            name=<span class="string">&quot;Researcher&quot;</span>,</span><br><span class="line">            system_prompt=<span class="string">&quot;You&#x27;re a researcher named &#x27;Researcher&#x27;.&quot;</span>,</span><br><span class="line">            model=model,</span><br><span class="line">            toolkit=Toolkit(tools=<span class="keyword">await</span> workspace.list_tools()),</span><br><span class="line">            offloader=workspace,</span><br><span class="line">        )</span><br><span class="line">        coder = Agent(</span><br><span class="line">            name=<span class="string">&quot;Coder&quot;</span>,</span><br><span class="line">            system_prompt=<span class="string">&quot;You&#x27;re a programmer named &#x27;Coder&#x27;.&quot;</span>,</span><br><span class="line">            model=model,</span><br><span class="line">            toolkit=Toolkit(tools=<span class="keyword">await</span> workspace.list_tools()),</span><br><span class="line">            offloader=workspace,</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        pipe = TeamPipeline(</span><br><span class="line">            leader=leader,</span><br><span class="line">            members=[</span><br><span class="line">                TeamMember(agent=researcher, description=<span class="string">&quot;Investigates a question and reports findings.&quot;</span>),</span><br><span class="line">                TeamMember(agent=coder, description=<span class="string">&quot;Writes and runs code in the workspace.&quot;</span>),</span><br><span class="line">            ],</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 满足 PipelineProtocol，可直接交给终端 UI</span></span><br><span class="line">        <span class="keyword">await</span> launch_console(agent=pipe)</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br></pre></td></tr></table></figure>
+
+<p>成员间建议共用一个 <code>LocalWorkspace</code>（如 Docker &#x2F; E2B 沙箱），以文件形式协作。<code>reply_stream</code> 也支持把用户授权答复按 <code>reply_id</code> 送回挂起的成员，从而优雅处理人机协同中断。</p>
+<h2 id="十、消息与事件（前后端流式传输）"><a href="#十、消息与事件（前后端流式传输）" class="headerlink" title="十、消息与事件（前后端流式传输）"></a>十、消息与事件（前后端流式传输）</h2><p><code>Msg</code> 是智能体通信与上下文持久化的基本单元，由类型化内容块（ContentBlock）有序组成：</p>
+<table>
+<thead>
+<tr>
+<th>块类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TextBlock</code></td>
+<td>文本</td>
+</tr>
+<tr>
+<td><code>ThinkingBlock</code></td>
+<td>模型推理过程</td>
+</tr>
+<tr>
+<td><code>ToolCallBlock</code></td>
+<td>工具调用（含 <code>name</code> &#x2F; <code>input</code> &#x2F; <code>state</code>）</td>
+</tr>
+<tr>
+<td><code>ToolResultBlock</code></td>
+<td>工具结果（其 <code>id</code> 须与对应 <code>ToolCallBlock.id</code> 一致）</td>
+</tr>
+</tbody></table>
+<p>三个角色工厂函数简化了构造：<code>UserMsg</code> &#x2F; <code>AssistantMsg</code> &#x2F; <code>SystemMsg</code>。</p>
+<p>事件流（<code>reply_stream</code> 的产出）遵循 <code>start → delta → end</code> 模式，前端可实时渲染。所有事件共享 <code>reply_id</code>，用 <code>block_id</code> &#x2F; <code>tool_call_id</code> 关联：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> agentscope.message <span class="keyword">import</span> AssistantMsg</span><br><span class="line"><span class="keyword">from</span> agentscope.event <span class="keyword">import</span> ReplyStartEvent</span><br><span class="line"></span><br><span class="line">msg = <span class="literal">None</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> event <span class="keyword">in</span> agent.reply_stream(user_msg):</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(event, ReplyStartEvent):</span><br><span class="line">        msg = AssistantMsg(name=event.name, content=[], <span class="built_in">id</span>=event.reply_id)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        msg.append_event(event)   <span class="comment"># 任意事件均可追加还原为完整消息</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="十一、从-SDK-到生产：智能体即服务（AaaS）"><a href="#十一、从-SDK-到生产：智能体即服务（AaaS）" class="headerlink" title="十一、从 SDK 到生产：智能体即服务（AaaS）"></a>十一、从 SDK 到生产：智能体即服务（AaaS）</h2><p>当你需要把智能体开放给多个用户、多会话并发使用时，AgentScope 2.0 提供了一键式的<strong>智能体即服务</strong>部署：</p>
+<ul>
+<li><strong>架构</strong>：把智能体部署为多租户、多会话的 HTTP 服务，自带可视化前端与 SDK。</li>
+<li><strong>RAG 服务 &#x2F; 工作区管理 &#x2F; SOP 服务 &#x2F; MCP 与技能中心 &#x2F; 消息渠道（飞书、钉钉、Discord）</strong> 等模块开箱即用。</li>
+<li>配合<strong>权限系统</strong>（全局策略 + 规则 + 工具内置检查）与<strong>沙箱工作区</strong>（本地 &#x2F; Docker &#x2F; E2B &#x2F; K8s），可在企业环境中安全落地。</li>
+</ul>
+<p>对于大多数团队，推荐路径是：先在本地方用 <code>Agent</code> + <code>reply_stream</code> 验证逻辑，再用 <code>TeamPipeline</code> 编排多智能体，最后通过 AaaS 部署为带多租户后端的服务。</p>
+<h2 id="十二、小结"><a href="#十二、小结" class="headerlink" title="十二、小结"></a>十二、小结</h2><p>AgentScope 2.0 的学习曲线并不陡，核心可以浓缩为四步：</p>
+<ol>
+<li><strong>装好框架</strong>：<code>uv pip install agentscope</code>。</li>
+<li><strong>接模型</strong>：用对应 <code>*Credential</code> + <code>*ChatModel</code> 接入你的大模型。</li>
+<li><strong>组智能体</strong>：<code>Agent(name, system_prompt, model, toolkit)</code>，按需配 <code>context_config</code> &#x2F; <code>react_config</code>。</li>
+<li><strong>跑起来</strong>：<code>await agent.reply(msg)</code> 拿结果，或 <code>agent.reply_stream(msg)</code> 做流式 UI；多智能体用 <code>TeamPipeline</code>。</li>
+</ol>
+<p>它在 1.x 的友好基础上，补齐了生产环境真正需要的「安全（权限 + 沙箱）、高效（柔性编排）、灵活（中间件）、完备（AaaS 全栈）」四大能力。如果你正在选型一个能从小实验平滑走向企业部署的智能体框架，AgentScope 2.0 值得一试。</p>
+<blockquote>
+<p>官方文档（含 RAG、长期记忆、实时语音、部署 API 等更细的章节）：<a target="_blank" rel="noopener" href="https://docs.agentscope.io/zh/versions/2.0.10">https://docs.agentscope.io/zh/versions/2.0.10</a></p>
+</blockquote>
+
+      <a class="back-home mdui-btn mdui-ripple" href="/"><i class="mdui-icon material-icons">arrow_back</i> 返回首页</a>
+     </div>
+    </div>
+   </div>
+
+   <div id="footer" class="footer">
+    <p class="remark">
+      <br>
+      
+      <br>Powered By <a href="https://hexo.io/" target="_blank"> Hexo </a> And <a href="https://mdui.org" target="_blank">MDUI</a>.<br /> Theme ❤ <a href="https://kuri.ink/" target="">kuri</a>. 
+
+    </p>
+   </div>
+  </div>
+ </body>
+</html>
