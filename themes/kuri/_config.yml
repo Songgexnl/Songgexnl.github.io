@@ -21,22 +21,15 @@ fav: /images/fav.png
 
 # Sidebar / 侧边栏
 sidebar:
-  A1: # 类别名称
-    B1: # 项目名称
-      - https://example.com/ # 超链接
-      - example # MDUI 鼠标悬停工具提示
   文章: # 类别名称
-    我的第一篇测试文章: # 项目名称
-      - /2026/10/15/hello-hexo/ # 超链接
-      - 测试文章 # MDUI 鼠标悬停工具提示
     如何使用 REA：逆向一切的工具: # 项目名称
       - /2026/10/15/rea-usage-intro/ # 超链接
       - REA 逆向工具 # MDUI 鼠标悬停工具提示
+    如何使用 AgentScope 2.0：从零搭建生产级智能体: # 项目名称
+      - /2026/10/19/agentscope-2-usage/ # 超链接
+      - AgentScope 2.0 教程 # MDUI 鼠标悬停工具提示
 
 sidebar_color: 
-  A1: # 类别名称
-    - near_me # 图标
-    - mdui-text-color-blue # 图标颜色
   文章: # 类别名称
     - library_books # 图标
     - mdui-text-color-green # 图标颜色
